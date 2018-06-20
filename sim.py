@@ -22,7 +22,7 @@ def orb_M(t):
     AE = 149597870700.0     # starting at (0,1.5173*AE)   circulation period 687 days
     
     
-    p_M = np.array([ 1.524 * AE * math.sin(t*2*math.pi/59356800.0), 1.5173 * AE * math.cos(t*2*math.pi/59356800)])    
+    p_M = np.array([ 1.524 * AE * math.sin(t*2.0*math.pi/59356800.0), 1.5173 * AE * math.cos(t*2.0*math.pi/59356800)])    
 
     return p_M
 
@@ -33,7 +33,7 @@ def orb_M(t):
 # x[1] position on y axis
 # x[2] velocity in x direction
 # x[3] velocity in y direction
-def f(t, x, u): 
+def f(t, x, u, w): 
 
     p = np.array([x[0], x[1]]) # position of the rocket
     v = np.array([x[2], x[3]]) # velocity of the rocket
@@ -56,11 +56,7 @@ def f(t, x, u):
     a = G * m_S * (p_S - p)/np.linalg.norm(p_S - p)**3      # sun
     a += G * m_E * (orb_E(t) - p)/np.linalg.norm(orb_E(t) - p)**3    # earth
     a += G * m_M * (orb_M(t) - p)/np.linalg.norm(orb_M(t) - p)**3    # mars
-    
-    
-    w = math.atan2(x[1],x[0]) # angle of rocket
-    
-    #print(w)
+          
     
     dp = v
     dv = a + u * np.array([math.sin(w), math.cos(w)])
@@ -81,20 +77,19 @@ if __name__ == "__main__":
     t1 = 2*365*24*60*60.0
     AE = 149597870700
 
-    p0 = np.array([1.001, 0]) * AE
-    v0 = np.array([0, 0])
+    p0 = np.array([6770000.0 + AE, 0]) # rocket starts on a satellite orbit 400 km above sea level
+    v0 = np.array([0, 7860.0])   # about first cosmic velocity
     
 
     x0 = np.concatenate((p0, v0))
 
     integrator = ode(f)#.set_integrator('zvode')
-    integrator.set_initial_value(x0, t0)        # scipy documentation  odeint
+    integrator.set_initial_value(x0, t0)        
 
     n = int(np.ceil((2*365*24*60*60.0)/100000.0))
     u = np.zeros((n,1))    # thrust u 
+    w = np.zeros((n,1))    # angle w of thrust u
     
-    u[0] = 0
-    u[n-1] = -20000
 
     n = int(np.ceil((t1-t0)/dt))+1
     Ts = np.zeros((n,1))
@@ -103,10 +98,10 @@ if __name__ == "__main__":
     Xs[0] = x0
     i = 1
     while integrator.successful() and integrator.t < t1:
-        integrator.set_f_params(u[i-1])
-        Ts[i] = integrator.t + dt       #set f params mit neuem u 
+        integrator.set_f_params(u[i-1],w[i-1])
+        Ts[i] = integrator.t + dt        
         Xs[i] = integrator.integrate(integrator.t+dt)
-        print(Xs[i][2])
+       # print(Xs[i][2])
        # print(Ts[i], Xs[i])
         i += 1
 
