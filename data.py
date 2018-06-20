@@ -5,12 +5,12 @@ class PlanetData:
         self.mars_trajectory_radius = 227940000000.0
 
         # mass of sun and planets
-        m_S = 1.99e30 # sun
-        m_E = 5.97e24 # earth
-        m_M = 6.39e23 # mars
+        self.m_S = 1.99e30 # sun
+        self.m_E = 5.97e24 # earth
+        self.m_M = 6.39e23 # mars
 
         # gravitational constant
-        G = 6.67408e-11
+        self.G = 6.67408e-11
 
         self.radius_earth = 6.371e6  # mean radius of earth
         self.earth_orbital_speed = 29.78e3  # mean orbital speed of earth around sun
@@ -22,7 +22,7 @@ class PlanetData:
         elif orbit == 'LEO':
             self.initial_height = 200e3  # LEO
 
-        self.orbital_speed= np.sqrt(G*m_E/self.initial_height)
+        self.orbital_speed= np.sqrt(self.G*self.m_E/self.initial_height)
     def orb_E(self,t):
           # starting at (AE,0)   circulation period 365 days
         p_E = np.array([self.AE * np.cos(t * 2 * np.pi / 31536000.0), self.AE * np.sin(t * 2 * np.pi / 31536000.0)])

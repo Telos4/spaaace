@@ -11,11 +11,15 @@ class FlightPlot:
 
         self.pd = PlanetData('GEO')
 
-        self.box_size = 1.5 * max(abs(Xs[0,0:2] - self.pd.orb_E(0.0)))
-        self.box_lbx = min(min(Xs[:,0]), min(Xs[:,4])) - self.box_size
-        self.box_ubx = max(max(Xs[:,0]), max(Xs[:,4])) + self.box_size
-        self.box_lby = min(min(Xs[:,1]), min(Xs[:,5])) - self.box_size
-        self.box_uby = max(max(Xs[:,1]), max(Xs[:,5])) + self.box_size
+        self.box_lbx = min(min(Xs[:,0]), min(Xs[:,4]), min(Xs[:,8]))
+        self.box_ubx = max(max(Xs[:,0]), max(Xs[:,4]), max(Xs[:,8]))
+        self.box_lby = min(min(Xs[:,1]), min(Xs[:,5]), max(Xs[:,9]))
+        self.box_uby = max(max(Xs[:,1]), max(Xs[:,5]), max(Xs[:,9]))
+        self.box_border = max(self.box_ubx - self.box_lbx, self.box_uby - self.box_lby)/10.0
+        self.box_lbx -= self.box_border
+        self.box_lby -= self.box_border
+        self.box_ubx += self.box_border
+        self.box_uby += self.box_border
         pass
 
 
