@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
+from matplotlib.widgets import TextBox
 
 from data import PlanetData
 
@@ -20,13 +21,19 @@ class FlightPlot:
         self.box_lby -= self.box_border
         self.box_ubx += self.box_border
         self.box_uby += self.box_border
+
         pass
 
+    def submit(self):
+        print("submit!")
 
     def plot(self):
         self.fig, axs = plt.subplots(3,2)
         self.ax = axs[0][0]
         self.ax.axis('equal')
+
+        text_box = TextBox(axs[1,1], 'Test Textbox', initial='initial_text')
+        text_box.on_submit(self.submit)
 
         self.rocket_x = self.Xs[:,0]
         self.rocket_y = self.Xs[:,1]
@@ -79,7 +86,7 @@ class FlightPlot:
         dist_ax2.plot(self.Ts, dist_mars)
 
         vel_ax2 = axs[2][1]
-        vel_mars = np.linalg.norm(self.Xs[:,10:12], axis=1)
+        vel_mars = np.linalg.norm(self.Xs[:,2:4] - self.Xs[:,10:12], axis=1)
         vel_ax2.plot(self.Ts, vel_mars)
 
         #return line_rocket, line_earth, line_mars, text_earth

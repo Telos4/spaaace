@@ -20,11 +20,6 @@ class FlightAnim:
         self.box_ubx = max
         self.box_lby = -max
         self.box_uby = max
-        #self.box_border = max(self.box_ubx - self.box_lbx, self.box_uby - self.box_lby)/10.0
-        #self.box_lbx -= self.box_border
-        #self.box_lby -= self.box_border
-        #self.box_ubx += self.box_border
-        #self.box_uby += self.box_border
 
         self.fig, self.ax = plt.subplots()
 
@@ -52,7 +47,7 @@ class FlightAnim:
         self.sun = Ellipse((0,0), 0.2*self.pd.AE,0.2*self.pd.AE, animated=False, color='yellow')
 
         self.text_rocket = self.ax.text(0,0, 'Rakete', animated=False)
-        self.text_earth = self.ax.text(0,0, 'Erde', animated=True)
+        self.text_earth = self.ax.text(0,0, 'Erde', animated=False)
         self.text_mars = self.ax.text(0,0, 'Mars')
         self.text_sun = self.ax.text(0,0, 'Sonne')
         self.text_time = self.ax.text(0.7*max, 0.9*max, 't = 0.0')
@@ -71,45 +66,52 @@ class FlightAnim:
 
         self.ax.set_aspect('equal')
         #plt.show()
+
+        self.speed = 20
+        self.myframe = 0
         pass
         #return line_rocket, line_earth, line_mars, text_earth
 
     def update(self, frame):
-        print("frame {}".format(frame))
-        print("p = ({},{})".format(self.Xs[frame,0], self.Xs[frame,1]))
+        print("  frame {}".format(frame))
+        print("myframe {}".format(self.myframe))
+        self.myframe = min(self.myframe, len(self.Ts)-1)
+        #print("p = ({},{})".format(self.Xs[frame,0], self.Xs[frame,1]))
 
         # position of rocket
-        pos_rocket = self.Xs[frame, 0:2]
+        pos_rocket = self.Xs[self.myframe, 0:2]
 
-        print("Rocket")
+        #print("Rocket")
         # update plot data for rocket
         self.rocket_x.append(pos_rocket[0])
         self.rocket_y.append(pos_rocket[1])
         self.line_rocket.set_data(self.rocket_x, self.rocket_y)
 
-        print("Earth")
+        #print("Earth")
         # update plot data for planets
-        pos_earth = self.Xs[frame, 4:6]
+        pos_earth = self.Xs[self.myframe, 4:6]
         self.earth_x.append(pos_earth[0])
         self.earth_y.append(pos_earth[1])
         self.line_earth.set_data(self.earth_x, self.earth_y)
         self.earth.center = pos_earth
 
-        print("Mars")
-        pos_mars = self.Xs[frame, 8:10]
+        #print("Mars")
+        pos_mars = self.Xs[self.myframe, 8:10]
         self.mars_x.append(pos_mars[0])
         self.mars_y.append(pos_mars[1])
         self.line_mars.set_data(self.mars_x, self.mars_y)
         self.mars.center = pos_mars
 
-        print("Labels")
+        #print("Labels")
         # labels
         self.text_rocket.set_position(pos_rocket)
         self.text_earth.set_position(pos_earth)
         self.text_mars.set_position(pos_mars)
         #self.text_mars.y = pos_mars[1]
 
-        self.text_time.set_text('t = {} days'.format(self.Ts[frame]/(60.0*60.0*24.0)))
+        self.text_time.set_text('t = {} Tage'.format(self.Ts[self.myframe]/(60.0*60.0*24.0)))
+
+        self.myframe += max(1, self.speed*self.speed)
 
         # update view
         #self.box_lbx = min(self.box_lbx, px-self.box_size)
@@ -124,12 +126,38 @@ class FlightAnim:
         #pause = Ts[frame+1] - Ts[frame]
         #print("pause: {}".format(pause/1000.0))
         #time.sleep(pause/5000.0)
-        print("Done")
-
         return self.line_rocket, self.line_earth, self.line_mars, self.text_rocket, self.text_earth, self.text_mars, self.text_sun, self.text_time
 
+
+    def onClick(self, event):
+        print("Click Event!")
+
+
+    def handleKeys(self, event):
+        #print("Key pressed!")
+        if event.key == ' ':
+            if self.anim_running:
+                self.anim.event_source.stop()
+                self.anim_running = False
+            else:
+                self.anim.event_source.start()
+                self.anim_running = True
+            print("Pause")
+
+        if event.key == 'left':
+            self.speed -= 1
+            print("speed = {}".format(self.speed))
+        elif event.key == 'right':
+            self.speed += 1
+            print("speed = {}".format(self.speed))
+        print("interval = {}".format(self.anim.event_source.interval))
     def animate(self):
+
+        self.anim_running = True
+        self.fig.canvas.mpl_connect('button_press_event', self.onClick)
+        self.fig.canvas.mpl_connect('key_press_event', self.handleKeys)
+
         n = len(self.Ts)
-        ani = anim.FuncAnimation(self.fig, self.update, frames=range(0, n, 200), interval=40, blit=False,
+        self.anim = anim.FuncAnimation(self.fig, self.update, frames=range(0, n, 1), interval=40, blit=False,
                                  repeat=False)
         plt.show()

@@ -1,9 +1,11 @@
 
 import numpy as np
+import time
 
 from data import PlanetData
 
 pd = PlanetData('GEO')
+t_timer_start = 0.0
 # ode for full simulation of rocket and all the planets
 # state x contains
 # x[0] position on x axis
@@ -40,6 +42,28 @@ def f_full(t, x, u, w):
 
     return dx
 
+def event_timeout(t, x):
+    t_diff = time.clock() - t_timer_start
+    t_max = 1.0
+    if t_diff > t_max:
+        print("Solver Timeout!")
+        return 0.0
+    else:
+        return t_max - t_diff
+
+def event_mars_hit(t, x):
+    dist = 5.0e7
+    vel_dist = 1.0e4
+
+    dist_rocket_mars = np.linalg.norm(x[0:2]-x[8:10])
+    vel_dist_rocket_mars = np.linalg.norm(x[2:4]-x[10:12])
+
+    if dist_rocket_mars < dist  and vel_dist_rocket_mars < vel_dist:
+        print("Mars orbit reached!")
+        return 0.0
+    else:
+        return dist_rocket_mars - dist + vel_dist_rocket_mars - vel_dist
+
 def f_planets(t, x ):
     p_E = np.array([x[0], x[1]]) # position of earth
     v_E = np.array([x[2], x[3]]) # velocity of earth
@@ -58,12 +82,12 @@ def f_planets(t, x ):
 
     # acceleration of mars due to gravity
     a_M = pd.G * pd.m_S * (p_S - p_M)/np.linalg.norm(p_S - p_M)**3    # sun
-    a_M += pd.G * pd.m_E * (p_M - p_E)/np.linalg.norm(p_M - p_E)**3   # earth
+    a_M += pd.G * pd.m_E * (p_E - p_M)/np.linalg.norm(p_M - p_E)**3   # earth
     dp_M = v_M
     dv_M = a_M
 
     # acceleration of sun due to gravity
-    a_S = pd.G * pd.m_E * (p_S - p_E)/np.linalg.norm(p_S - p_E)**3    # earth
+    a_S = pd.G * pd.m_E * (p_E - p_S)/np.linalg.norm(p_S - p_E)**3    # earth
     a_S += pd.G * pd.m_M * (p_M - p_S)/np.linalg.norm(p_M - p_S)**3   # mars
     dp_S = v_S
     dv_S = a_S

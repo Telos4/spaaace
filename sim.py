@@ -1,17 +1,17 @@
-import math
 import numpy as np
 from numpy.linalg import eig, inv
 from scipy.integrate import ode, solve_ivp
 from scipy.optimize import fsolve
 from matplotlib.patches import Ellipse
-import matplotlib.pyplot as plt
-
 
 from flight_animation import FlightAnim
 from flight_plot import FlightPlot
 
-from odes import f_planets, f_full
+#from odes import f_planets, f_full, event_mars_hit, event_timeout
+import odes
 from data import PlanetData
+
+import simulator
 
 pd = PlanetData('GEO')
 
@@ -122,90 +122,23 @@ def intersection_angle(point, ellipse_params):
 
     angle = 0.0
     return angle, tangent_vector
+
 if __name__ == "__main__":
 
     # command array (time, angle, thrust)
 
     t0 = 0.0
     tf = 40000000.0
-    #tf = 15000000.0
     dt = 600.0
 
+    simulator = simulator.Simulator(pd)
+    # commands = (time, duration, angle, thrust)
+    commands = np.array([[0.0, 1200.0, 0.0, 5.0],[13352221.0, 1200.0, 4.4057, 3.8938]])
+    #commands = np.array([[110.0, 1200.0, 0.0, 5.0],[1500.0, 100.0, 4.4057, 3.8938]])
 
-    # simulate earth-mars system up to standby time
+    Ts, Xs = simulator.run_simulation(commands, tf)
 
-    x0_planets = np.zeros(12)
-    # earth
-    x0_planets[0] = pd.AE
-    x0_planets[1] = 0
-    x0_planets[2] = 0
-    x0_planets[3] = pd.earth_orbital_speed
-
-    # mars
-    x0_planets[4] = pd.mars_trajectory_radius
-    x0_planets[5] = 0
-    x0_planets[6] = 0
-    x0_planets[7] = pd.mars_orbital_speed
-
-    # sun
-    x0_planets[8] = 0
-    x0_planets[9] = 0
-    x0_planets[10] = 0
-    x0_planets[11] = 0
-
-    #x0_planets[4:8] = np.array([ 2.02983240e+11,  1.03711178e+11, -1.09818735e+04,  2.14969135e+04])
-    #x0_planets[4:8] = np.array([ 3.57442305e+10,  2.25147409e+11, -2.38385523e+04,  3.78750719e+03])
-
-    # Ts = np.array([0.0])
-    # Xs = np.array([x0_planets])
-    # sol = solve_ivp(fun= lambda t, x: f_planets(t, x), t_span=(t0, t_wait), y0=x0_planets, method='Radau')
-    # t0 = sol.t[-1]
-    # x0_planets = sol.y[:,-1]
-    # x0_planets[8:12] = np.array([ 3.57442305e+10,  2.25147409e+11, -2.38385523e+04,  3.78750719e+03]) # set mars initial point
-    # # initial conditions
-    # # rocket
-    # e1 = np.array([1.0, 0.0])
-    # p_earth = x0_planets[0:2]
-    # p_earth = p_earth/np.linalg.norm(p_earth)
-    # theta = np.arccos(np.dot(p_earth, e1))
-    # if p_earth[1] < 0.0:
-    #     # if vector points down in the y-component we have to adjust the angle such that it is mathematically positive
-    #     theta = 2.0 * np.pi - theta
-    r = pd.radius_earth + pd.initial_height
-    x0 = np.zeros(16)
-    x0[0] = pd.AE + r
-    x0[1] = 0.0
-    x0[2] = 0.0
-    x0[3] = pd.earth_orbital_speed + pd.orbital_speed
-
-    x0[4:16] = x0_planets[0:12]
-
-
-    #commands = np.array([[0.0, 0.0, 100.0],[60.0, 0.0, 0.0], [17799466, 0.84159, -42.0], [17799466+60.0, 0.0, 0.0], [tf, 0.0, 0.0]])
-    #commands = np.array([[0.0, 0.0, 85.0],[60.0, 0.0, 0.0], [17799466, 0.84159, 0.0], [17799466+60.0, 0.0, 0.0], [tf, 0.0, 0.0]])
-    commands = np.array([[t0, 0.0, 100.0],[t0+100.0, 0.0, 0.0], [tf, 0.0, 0.0]])
-    #commands = np.array([[0.0, 0.0, 5.0],[1200.0, 0.0, 0.0], [13352221.0, 4.4057, 3.8938], [13352221.0+1200.0, 0.0, 0.0], [tf, 0.0, 0.0]])
-
-    # control to mars orbit
-    #commands = np.array([[0.0, 0.0, 85.0],[60.0, 0.0, 0.0], [17155225.6896, 4.372603237195853, 52.11686514333684], [17155225.689+60.0, 0.0, 0.0], [tf, 0.0, 0.0]])
-
-    Ts = np.array([commands[0,0]])
-    Xs = np.array([x0])
-    for i in range(0, len(commands[:,0])-1):
-        t0 = commands[i,0]
-        t1 = commands[i+1,0]
-        w = commands[i,1]
-        u = commands[i,2]
-
-        t_eval = np.linspace(t0, t1, np.ceil(t1/dt)+1)
-
-        sol = solve_ivp(fun= lambda t, x: f_full(t, x, u, w), t_span=(t0, t1), y0=x0, t_eval=t_eval, method='Radau')
-        Ts = np.concatenate((Ts, sol.t[1:]))
-        Xs = np.concatenate((Xs, np.transpose(sol.y[:,1:])))
-        x0 = Xs[-1]
-        pass
-
-    fp = FlightPlot(Ts, Xs)
+    #fp = FlightPlot(Ts, Xs)
     #fp.plot()
 
     fa = FlightAnim(Ts, Xs)
@@ -247,14 +180,14 @@ if __name__ == "__main__":
         x0_planets[7] = - x0_planets[7]
 
         T_delta = T_intersect_rocket - T_intersect_mars
-        sol = solve_ivp(fun= lambda t, x: f_planets(t, x), t_span=(t0, T_delta), y0=x0_planets, method='Radau')
+        sol = solve_ivp(fun= lambda t, x: odes.f_planets(t, x), t_span=(t0, T_delta), y0=x0_planets, method='Radau')
         X0_mars = sol.y[4:8, -1]
     else:
         # mars arrives after rocket
         # set initial position forward
         T_delta = T_intersect_mars - T_intersect_rocket
         # simulate from initial position for T_delta time
-        sol = solve_ivp(fun= lambda t, x: f_planets(t, x), t_span=(t0, T_delta), y0=x0_planets, method='Radau')
+        sol = solve_ivp(fun= lambda t, x: odes.f_planets(t, x), t_span=(t0, T_delta), y0=x0_planets, method='Radau')
         X0_mars = sol.y[4:8, -1]
 
     #T_delta = T_intersect_mars - T_intersect_rocket
