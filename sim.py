@@ -75,10 +75,10 @@ if __name__ == "__main__":
     t0 = 0.0
     dt = 100000.0
     t1 = 2*365*24*60*60.0
-    AE = 149597870700
+    AE = 149597870700.0
 
-    p0 = np.array([6770000.0 + AE, 0]) # rocket starts on a satellite orbit 400 km above sea level
-    v0 = np.array([0, 7860.0])   # about first cosmic velocity
+    p0 = np.array([12000000.0 + AE, 0]) # rocket starts on a satellite orbit 180 km above sea level
+    v0 = np.array([0, 37910.0])   # should be about 7910 m/s (1. kosmic velocity) + 30 km/s (speed of earth)
     
 
     x0 = np.concatenate((p0, v0))
@@ -86,10 +86,17 @@ if __name__ == "__main__":
     integrator = ode(f)#.set_integrator('zvode')
     integrator.set_initial_value(x0, t0)        
 
-    n = int(np.ceil((2*365*24*60*60.0)/100000.0))
-    u = np.zeros((n,1))    # thrust u 
-    w = np.zeros((n,1))    # angle w of thrust u
+    l = int(np.ceil((2*365*24*60*60.0)/100000.0))
+    u = np.zeros((l,1))    # thrust u 
+    w = np.zeros((l,1))    # angle w of thrust u
     
+    u[0] = 0
+    u[(365*12*60*60.0)/100000.0] = 0.06    # leave earth orbit
+    u[38000000.0/100000.0] = 0.02758978    # enter mars orbit
+    
+    w[0] = 0
+    w[(365*12*60*60.0)/100000.0] = math.pi
+    w[38000000.0/100000.0] = 0
 
     n = int(np.ceil((t1-t0)/dt))+1
     Ts = np.zeros((n,1))
@@ -101,9 +108,14 @@ if __name__ == "__main__":
         integrator.set_f_params(u[i-1],w[i-1])
         Ts[i] = integrator.t + dt        
         Xs[i] = integrator.integrate(integrator.t+dt)
-       # print(Xs[i][2])
+        #print(Ts[i])
        # print(Ts[i], Xs[i])
         i += 1
+        
+    distance = np.concatenate((Xs[:,0], Xs[:,1]))  # get time for speeding up on mars orbit
+    for t in range(l):
+        if np.linalg.norm(distance[t]) > 1.5169 * AE :
+            print(Ts[t])
 
     earth_orbit = Ellipse((0,0), 2*AE, 2*0.9999*AE)
     earth = Ellipse((1*AE,0), 0.1*AE, 0.1*AE)
