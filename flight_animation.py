@@ -25,7 +25,7 @@ class FlightAnim:
         #max_x = np.max(np.abs([Xs[:,0], Xs[:,4], Xs[:,8]]))
         #max_y = np.max(np.abs([Xs[:,1], Xs[:,5], Xs[:,9]]))
         #max = np.max([max_x, max_y]) * 1.1
-        max = 4.0 * self.pd.AE
+        max = 3.0 * self.pd.AE
 
         self.box_lbx = -max
         self.box_ubx = max

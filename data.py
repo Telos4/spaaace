@@ -23,19 +23,6 @@ class PlanetData:
             self.initial_height = 200e3  # LEO
 
         self.orbital_speed= np.sqrt(self.G*self.m_E/self.initial_height)
-    def orb_E(self,t):
-          # starting at (AE,0)   circulation period 365 days
-        p_E = np.array([self.AE * np.cos(t * 2 * np.pi / 31536000.0), self.AE * np.sin(t * 2 * np.pi / 31536000.0)])
-        #p_E = np.array([self.AE, 0])
-
-        return p_E
-
-    def orb_M(self,t):
-        # starting at (0,1.5173*AE)   circulation period 687 days
-        p_M = np.array(
-            [self.mars_trajectory_radius * np.cos(t * 2 * np.pi / 59356800.0), self.mars_trajectory_radius * np.sin(t * 2 * np.pi / 59356800)])
-
-        return p_M
 
     def sun_dist(self, x):
         return np.sqrt(x[0]**2 + x[1]**2)
