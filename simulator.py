@@ -7,8 +7,7 @@ import time
 class Simulator():
     def __init__(self, pd):
         self.t0 = 0.0
-        self.tf = 1500000.0
-        self.dt = 60.0
+        self.dt = 600.0
 
         self.x0_planets = np.zeros(12)
 
@@ -43,8 +42,22 @@ class Simulator():
         self.x0[4:16] = self.x0_planets[0:12]
 
         odes.event_mars_hit.terminal = False
-        odes.event_timeout.terminal = False
+        odes.event_timeout.terminal = True
 
+    def set_mars_position(self, x_mars_new):
+        self.x0[8:12] = x_mars_new
+
+    def reset_mars_position(self):
+        self.x0[8:12] = self.x0_planets[4:8]
+
+    def run_simulation_planets(self, tf):
+        x0_temp = self.x0_planets
+        t0 = self.t0
+        t1 = tf
+        sol = solve_ivp(fun=lambda t, x: odes.f_planets(t, x), t_span=(t0, t1), y0=x0_temp, method='RK45',
+                        rtol=1.0e-5, atol=1.0e-8)
+        res = sol.y[:, -1]
+        return res
 
     def run_simulation(self, commands, tf):
         x = self.x0
@@ -57,6 +70,7 @@ class Simulator():
         # convert commands to format used by solver
         # commands = (time, duration, angle, thrust)
         # commands_mode = (time, angle, thrust)
+        print(commands)
         if commands[0,0] > t:
             commands_mod = [np.zeros(3)]
         else:
@@ -104,7 +118,6 @@ class Simulator():
             Ts = np.concatenate((Ts, sol.t[1:]))
             Xs = np.concatenate((Xs, np.transpose(sol.y[:,1:])))
             x = Xs[-1]
-            t = t1
             pass
         t_timer_end = time.clock()
         print("ODE solve duration: {}".format(t_timer_end-t_timer_start))
