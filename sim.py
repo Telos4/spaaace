@@ -15,10 +15,7 @@ import simulator
 
 pd = PlanetData('GEO')
 
-
-
 if __name__ == "__main__":
-
     #simulator = simulator.Simulator(pd)
     #commands = np.array([[0.0, 1200.0, 0.0, 5.0], [3000.0, 100.0, 0.0, 0.0]])
     #Ts, Xs = simulator.run_simulation(commands, 1.0e8)
@@ -170,5 +167,5 @@ if __name__ == "__main__":
     fp.ax.add_artist(em)
     fp.ax.add_artist(er)
 
-    pass
+   pass
 
