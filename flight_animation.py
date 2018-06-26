@@ -22,6 +22,12 @@ class FlightAnim:
         self.Xs = []
         self.Ts = []
 
+        self.difficulty = 1
+        # 0 = just hit space around mars in distance of 0.1 AE
+        # 1 = 0.01 AE
+        # 2 = actual size
+        # 3 = match speed of mars
+
         #max_x = np.max(np.abs([Xs[:,0], Xs[:,4], Xs[:,8]]))
         #max_y = np.max(np.abs([Xs[:,1], Xs[:,5], Xs[:,9]]))
         #max = np.max([max_x, max_y]) * 1.1
@@ -85,6 +91,7 @@ class FlightAnim:
         self.rocket_x = []
         self.rocket_y = []
         self.line_rocket, = self.ax.plot(self.rocket_x, self.rocket_y, 'k', animated=False)
+        self.point_rocket, = self.ax.plot([],[], color='k', marker='o', markersize=2, animated=False)
 
         self.earth_x = []
         self.earth_y = []
@@ -94,7 +101,7 @@ class FlightAnim:
         self.mars_x = []
         self.mars_y = []
         self.line_mars, = self.ax.plot(self.mars_x, self.mars_y, color='r', linestyle='--', animated=False)
-        self.mars = Ellipse((0, 1.5173 * self.pd.AE), 0.1 * self.pd.AE, 0.1 * self.pd.AE, animated=False, color='red')
+        self.mars = Ellipse((0, 1.5173 * self.pd.AE), 0.01 * self.pd.AE, 0.01 * self.pd.AE, animated=False, color='red')
 
         self.sun_x = []
         self.sun_y = []
@@ -103,8 +110,8 @@ class FlightAnim:
 
         self.text_rocket = self.ax.text(0,0, 'Rakete', animated=False)
         self.text_earth = self.ax.text(0,0, 'Erde', animated=False, verticalalignment='top')
-        self.text_mars = self.ax.text(0,0, 'Mars')
-        self.text_sun = self.ax.text(0,0, 'Sonne')
+        self.text_mars = self.ax.text(0,0, 'Mars', verticalalignment='top')
+        self.text_sun = self.ax.text(0,0, 'Sonne', verticalalignment='top')
 
         # set initial plot sector
         #self.ax.axis('equal')
@@ -187,6 +194,7 @@ class FlightAnim:
         self.rocket_x.append(pos_rocket[0])
         self.rocket_y.append(pos_rocket[1])
         self.line_rocket.set_data(self.rocket_x, self.rocket_y)
+        self.point_rocket.set_data([pos_rocket[0]], [pos_rocket[1]])
 
         # update plot data for planets
         pos_earth = self.Xs[self.myframe, 4:6]
@@ -200,7 +208,6 @@ class FlightAnim:
         self.mars_y.append(pos_mars[1])
         self.line_mars.set_data(self.mars_x, self.mars_y)
         self.mars.center = pos_mars
-
         # labels
         self.text_rocket.set_position(pos_rocket)
         self.text_earth.set_position(pos_earth)
@@ -211,6 +218,15 @@ class FlightAnim:
         self.text_vel_mars.set_text('v_M = ({:6.0f}, {:6.0f})'.format(self.Xs[self.myframe][10], self.Xs[self.myframe][11]))
 
         self.myframe += max(1, self.speed*self.speed)
+
+        # check victory conditions
+        dist_rocket_mars = np.linalg.norm(np.array(pos_rocket) - np.array(pos_mars))
+        if self.difficulty == 1:
+            if dist_rocket_mars < 0.1 * self.pd.AE:
+                print("Victory!")
+        elif self.difficulty == 2:
+            if dist_rocket_mars < 0.01 * self.pd.AE:
+                print("Victory!")
 
         return self.line_rocket, self.line_earth, self.line_mars, self.text_rocket, self.text_earth, self.text_mars, \
                self.text_sun, self.text_time, self.command_text_boxes
@@ -239,8 +255,27 @@ class FlightAnim:
         elif event.key == '+':
             self.speed += 1
             print("speed = {}".format(self.speed))
-        elif event.key == 's':
+        elif event.key == 'ctrl+l':
             print("autosolve")
+            self.auto_solve()
+        elif event.key == 'ctrl+1':
+            self.difficulty = 1
+        elif event.key == 'ctrl+2':
+            self.difficulty = 2
+        elif event.key == 'ctrl+3':
+            self.difficulty = 3
+        elif event.key == 'ctrl+4':
+            self.difficulty = 4
+
+        if self.difficulty == 1:
+            self.mars.width = 0.1 * self.pd.AE
+            self.mars.height = 0.1 * self.pd.AE
+        elif self.difficulty == 2:
+            self.mars.width = 0.01 * self.pd.AE
+            self.mars.height = 0.01 * self.pd.AE
+        elif self.difficulty > 2:
+            self.mars.width = 3.390e3
+            self.mars.height = 3.390e3
 
     def auto_solve(self):
         # reset to get a clean state
