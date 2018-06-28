@@ -25,6 +25,8 @@ class FlightAnim:
         # 1 = just hit space around mars in distance of 0.1 AE
         # 2 = 0.01 AE
         # 3 = orbit
+        
+        
 
         max = 3.0 * self.pd.AE
 
@@ -45,7 +47,7 @@ class FlightAnim:
 
         # set up axes
         for i in range(0, len(self.commands.keys())):
-            self.ax_command_input.append(plt.subplot(gs[i, 7:]))
+            self.ax_command_input.append(plt.subplot(gs[i+1, 7:]))
 
         # define command input field
         for i in range(0, len(self.commands.keys())):
@@ -59,7 +61,7 @@ class FlightAnim:
             f = functools.partial(self.submit_command, i)
             self.command_text_boxes[i].on_submit(f)
 
-        self.ax_mars_delta_t = plt.subplot(gs[command_input_fields, 7:])
+        self.ax_mars_delta_t = plt.subplot(gs[command_input_fields + 1, 7:])
 
         self.delta_t_mars_text_box = TextBox(self.ax_mars_delta_t, 'Delta t Mars ', initial='0.0')
         self.delta_t_mars_text_box.on_submit(self.submit_delta_t_mars)
@@ -69,6 +71,12 @@ class FlightAnim:
         self.ax_time.get_xaxis().set_visible(False)
         self.ax_time.get_yaxis().set_visible(False)
         self.text_time = self.ax_time.text(0.1, 0.5, 't = 0.0')
+        
+        self.ax_comdescript = plt.subplot(gs[0, 7:])
+        self.ax_comdescript.get_xaxis().set_visible(False)
+        self.ax_comdescript.get_yaxis().set_visible(False)
+        self.text_comdescript = self.ax_comdescript.text(0.1, 0.1, 'Zeit, Dauer, Winkel, Schub')
+        self.text_comvar = self.ax_comdescript.text(0.1, 0.6, 't,    delta t,  w,         u')
 
         self.ax_info = plt.subplot(gs[7:10, 0:3])
         self.ax_info.get_xaxis().set_visible(False)
@@ -78,6 +86,17 @@ class FlightAnim:
         self.ax_info.get_xaxis().set_visible(False)
         self.ax_info.get_yaxis().set_visible(False)
         self.text_vel_mars = self.ax_info.text(0.1, 0.75, 'v_{M} = (0.0, 0.0)')
+        
+        self.ax_infocontrol = plt.subplot(gs[8:10, 4:8])
+        self.ax_infocontrol.get_xaxis().set_visible(False)
+        self.ax_infocontrol.get_yaxis().set_visible(False)
+        self.text_setfaster = self.ax_infocontrol.text(0.1, 0.1, 'Sim-Geschw. erhöhen : -')
+        self.ax_infocontrol.get_xaxis().set_visible(False)
+        self.ax_infocontrol.get_yaxis().set_visible(False)
+        self.text_setslower = self.ax_infocontrol.text(0.1, 0.35, 'Sim-Geschw. verringern : +')
+        self.ax_infocontrol.get_xaxis().set_visible(False)
+        self.ax_infocontrol.get_yaxis().set_visible(False)
+        self.text_setpause = self.ax_infocontrol.text(0.1, 0.75, 'Pause : ↑')
 
         self.victory_text = self.ax_info.text(0.1, 0.25, 'Victory!')
 
@@ -123,9 +142,11 @@ class FlightAnim:
 
         self.ax_time.add_artist(self.text_time)
 
-        self.button_run = Button(self.ax_button, 'Start')
+        self.button_run = Button(self.ax_button, 'Start', color='g', hovercolor='g')
         self.button_run.on_clicked(self.callback_button_run)
 
+        self.fig.canvas.mpl_connect('motion_notify_event', self.axes_enter)
+        #self.fig.canvas.mpl_connect('axes_enter_event', self.axes_enter)
         self.fig.canvas.mpl_connect('button_press_event', self.onClick)
         self.fig.canvas.mpl_connect('key_press_event', self.handleKeys)
 
@@ -136,6 +157,21 @@ class FlightAnim:
 
         self.anim_running = False
         self.anim = None
+
+    def axes_enter(self, event):
+        print("entered button!")
+        if self.anim_running == False:
+            self.sun.axes.draw_artist(self.sun)
+            self.earth.axes.draw_artist(self.earth)
+            self.mars.axes.draw_artist(self.mars)
+            self.text_sun.axes.draw_artist(self.text_sun)
+            self.text_mars.axes.draw_artist(self.text_mars)
+            self.text_earth.axes.draw_artist(self.text_earth)
+            self.text_time.axes.draw_artist(self.text_time)
+            self.text_vel_rocket.axes.draw_artist(self.text_vel_rocket)
+            self.text_vel_mars.axes.draw_artist(self.text_vel_mars)
+            self.ax.figure.canvas.blit(self.ax.bbox)
+        #self.ax.draw()
 
     def init_func(self):
         # initialize plot data
