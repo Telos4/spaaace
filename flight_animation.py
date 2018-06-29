@@ -36,6 +36,7 @@ class FlightAnim:
         self.fig = plt.figure()
         gs = gridspec.GridSpec(10, 10)
         self.ax = plt.subplot(gs[1:7, 0:6])
+        self.ax.grid(True)
         command_input_fields = 5
         self.ax_command_input = []
         self.command_text_boxes = []
@@ -70,7 +71,12 @@ class FlightAnim:
         self.ax_time.get_yaxis().set_visible(False)
         self.text_time = self.ax_time.text(0.1, 0.5, 't = 0.0')
 
-        self.ax_info = plt.subplot(gs[7:10, 0:3])
+        self.ax_level = plt.subplot(gs[0, 0:2])
+        self.ax_level .get_xaxis().set_visible(False)
+        self.ax_level .get_yaxis().set_visible(False)
+        self.text_level = self.ax_level.text(0.1, 0.5, 'Level 1')
+
+        self.ax_info = plt.subplot(gs[7:10, 0:5])
         self.ax_info.get_xaxis().set_visible(False)
         self.ax_info.get_yaxis().set_visible(False)
         self.text_vel_rocket = self.ax_info.text(0.1, 0.25, 'v_{R} = (0.0, 0.0)')
@@ -123,10 +129,13 @@ class FlightAnim:
 
         self.ax_time.add_artist(self.text_time)
 
-        self.button_run = Button(self.ax_button, 'Start')
+        self.button_run = Button(self.ax_button, 'Start', color='g', hovercolor='g')
         self.button_run.on_clicked(self.callback_button_run)
 
-        self.fig.canvas.mpl_connect('button_press_event', self.onClick)
+        self.fig.canvas.mpl_connect('motion_notify_event', self.axes_enter)
+        self.fig.canvas.mpl_connect('resize_event', self.axes_enter)
+        #self.fig.canvas.mpl_connect('button_press_event', self.axes_enter)
+
         self.fig.canvas.mpl_connect('key_press_event', self.handleKeys)
 
         self.ax.set_aspect('equal')
@@ -136,6 +145,29 @@ class FlightAnim:
 
         self.anim_running = False
         self.anim = None
+        self.redraw = False
+
+    def axes_enter(self, event):
+        if self.redraw:
+            self.line_earth.axes.draw_artist(self.line_earth)
+            self.line_mars.axes.draw_artist(self.line_mars)
+            self.line_rocket.axes.draw_artist(self.line_rocket)
+            self.point_rocket.axes.draw_artist(self.point_rocket)
+            self.sun.axes.draw_artist(self.sun)
+            self.earth.axes.draw_artist(self.earth)
+            self.mars.axes.draw_artist(self.mars)
+            self.text_sun.axes.draw_artist(self.text_sun)
+            self.text_mars.axes.draw_artist(self.text_mars)
+            self.text_earth.axes.draw_artist(self.text_earth)
+            self.text_rocket.axes.draw_artist(self.text_rocket)
+            self.text_time.axes.draw_artist(self.text_time)
+            self.text_vel_rocket.axes.draw_artist(self.text_vel_rocket)
+            self.text_vel_mars.axes.draw_artist(self.text_vel_mars)
+            self.text_level.draw_artist(self.text_level)
+            self.victory_text.axes.draw_artist(self.victory_text)
+            self.ax.figure.canvas.blit(self.ax.bbox)
+            self.ax_time.figure.canvas.blit(self.ax_time.bbox)
+            self.ax_info.figure.canvas.blit(self.ax_info.bbox)
 
     def init_func(self):
         # initialize plot data
@@ -156,12 +188,13 @@ class FlightAnim:
         self.text_vel_rocket.set_text('')
         self.text_vel_mars.set_text('')
         self.victory_text.set_text('')
+        self.text_level.set_text('')
 
         print("init!")
 
         return self.line_rocket, self.line_earth, self.line_mars, self.point_rocket, self.earth, self.mars, self.sun, \
                self.text_rocket, self.text_earth, self.text_mars, self.text_sun, self.text_time, self.text_vel_rocket, \
-               self.text_vel_mars, self.victory_text
+               self.text_vel_mars, self.victory_text, self.text_level
 
     def update_func(self, frame):
         self.myframe = min(self.myframe, len(self.Ts) - 1)
@@ -204,6 +237,7 @@ class FlightAnim:
             'v_R = ({:6.0f}, {:6.0f})'.format(vel_rocket[0], vel_rocket[1]))
         self.text_vel_mars.set_text(
             'v_M = ({:6.0f}, {:6.0f})'.format(vel_mars[0], vel_mars[1]))
+        self.text_level.set_text('Level {}'.format(self.difficulty))
 
         # check victory conditions
         dist_rocket_mars = np.linalg.norm(np.array(pos_rocket) - np.array(pos_mars))
@@ -214,7 +248,7 @@ class FlightAnim:
 
         return self.line_rocket, self.line_earth, self.line_mars, self.point_rocket, self.earth, self.mars, self.sun, \
                self.text_rocket, self.text_earth, self.text_mars, self.text_sun, self.text_time, self.text_vel_rocket, \
-               self.text_vel_mars, self.victory_text
+               self.text_vel_mars, self.victory_text, self.text_level
 
     def check_victory(self, dist, vel_dist):
         victory = False
@@ -243,9 +277,11 @@ class FlightAnim:
                 if self.commands[k] is not None:
                     energy += self.commands[k][1] * self.commands[k][3]**2
             text = 'Mars erreicht!\n\n Zeit (d): {:6.2f} \n Abstand (km): {:6.2f} \n Delta v (m/s): {:6.2f} \n ' \
-                   'Energieverbrauch: {:6.2f}'.format(days, dist, vel_dist, energy)
+                   'Treibstoffverbrauch: {:6.2f}'.format(days, dist, vel_dist, energy)
             self.victory_text.set_text(text)
 
+            self.anim_running = False
+            self.redraw = True
             self.anim.event_source.stop()
 
         else:
@@ -298,9 +334,11 @@ class FlightAnim:
             if self.anim_running:
                 self.anim.event_source.stop()
                 self.anim_running = False
+                self.redraw = True
             else:
                 self.anim.event_source.start()
                 self.anim_running = True
+                self.redraw = False
             print("Pause")
 
         # control simulation speed
@@ -384,10 +422,11 @@ class FlightAnim:
 
         a_des = delta_v / 1200.0
         u_des = a_des[0] / np.cos(w_des)
+        w_des = w_des * 360.0 / (2.0 * np.pi)
 
         self.commands[1] = np.array([T_intersect_rocket, 1200.0, w_des, u_des])
 
-        new_text = "{:6.0f} {:6.2f} {:6.2f} {:6.2f}".format(self.commands[1][0],self.commands[1][1],self.commands[1][2],self.commands[1][3])
+        new_text = "{:6.0f} {:6.2f} {:6.2f} {:6.2f}".format(self.commands[1][0],self.commands[1][1], self.commands[1][2],self.commands[1][3])
         self.command_text_boxes[1].set_val(new_text)
 
         new_time_mars = "{:6.0f} ".format(self.delta_t_mars)
@@ -428,10 +467,14 @@ class FlightAnim:
             print(commands_clean)
             print(self.commands[i])
             if self.commands[i] is not None:
+                c = np.copy(self.commands[i])
+                c[2] = c[2] / 360.0 * 2.0 * np.pi # convert to rad
+
+                print("c = {}".format(c))
                 if commands_clean is None:
-                    commands_clean = np.array([self.commands[i]])
+                    commands_clean = np.array([c])
                 else:
-                    commands_clean = np.vstack((commands_clean, self.commands[i]))
+                    commands_clean = np.vstack((commands_clean, c))
         return commands_clean
 
     def main_loop(self):

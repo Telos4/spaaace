@@ -59,7 +59,7 @@ def event_mars_hit(t, x):
     vel_dist_rocket_mars = np.linalg.norm(x[2:4]-x[10:12])
 
     if dist_rocket_mars < dist  and vel_dist_rocket_mars < vel_dist:
-        print("Mars orbit reached!")
+        #print("Mars orbit reached!")
         return 0.0
     else:
         return dist_rocket_mars - dist + vel_dist_rocket_mars - vel_dist
