@@ -188,6 +188,7 @@ class FlightAnim:
             self.ax_level.figure.canvas.blit(self.ax_level.bbox)
 
     def init_func(self):
+        print("init function")
         # initialize plot data
         self.line_rocket.set_data([], [])
         self.line_earth.set_data([], [])
@@ -213,54 +214,58 @@ class FlightAnim:
                self.text_vel_mars, self.victory_text, self.text_level
 
     def update_func(self, frame):
-        self.myframe = min(self.myframe, len(self.Ts) - 1)
+        if self.anim_running:
+            self.myframe = min(self.myframe, len(self.Ts) - 1)
 
-        self.text_rocket.set_text('Rakete')
-        self.text_earth.set_text('Erde')
-        self.text_mars.set_text('Mars')
-        self.text_sun.set_text('Sonne')
+            self.text_rocket.set_text('Rakete')
+            self.text_earth.set_text('Erde')
+            self.text_mars.set_text('Mars')
+            self.text_sun.set_text('Sonne')
 
-        # update plot data for rocket
-        pos_rocket = self.Xs[self.myframe, 0:2]
-        self.rocket_x.append(pos_rocket[0])
-        self.rocket_y.append(pos_rocket[1])
-        self.line_rocket.set_data(self.rocket_x, self.rocket_y)
-        self.point_rocket.set_data(pos_rocket[0], pos_rocket[1])
-        self.text_rocket.set_position(pos_rocket)
+            # update plot data for rocket
+            pos_rocket = self.Xs[self.myframe, 0:2]
+            self.rocket_x.append(pos_rocket[0])
+            self.rocket_y.append(pos_rocket[1])
+            self.line_rocket.set_data(self.rocket_x, self.rocket_y)
+            self.point_rocket.set_data(pos_rocket[0], pos_rocket[1])
+            self.text_rocket.set_position(pos_rocket)
 
-        # update plot data for earth
-        pos_earth = self.Xs[self.myframe, 4:6]
-        self.earth_x.append(pos_earth[0])
-        self.earth_y.append(pos_earth[1])
-        self.line_earth.set_data(self.earth_x, self.earth_y)
-        self.earth.center = pos_earth
-        self.text_earth.set_position(pos_earth)
+            # update plot data for earth
+            pos_earth = self.Xs[self.myframe, 4:6]
+            self.earth_x.append(pos_earth[0])
+            self.earth_y.append(pos_earth[1])
+            self.line_earth.set_data(self.earth_x, self.earth_y)
+            self.earth.center = pos_earth
+            self.text_earth.set_position(pos_earth)
 
-        # update plot data for mars
-        pos_mars = self.Xs[self.myframe, 8:10]
-        self.mars_x.append(pos_mars[0])
-        self.mars_y.append(pos_mars[1])
-        self.line_mars.set_data(self.mars_x, self.mars_y)
-        self.mars.center = pos_mars
-        self.text_mars.set_position(pos_mars)
+            # update plot data for mars
+            pos_mars = self.Xs[self.myframe, 8:10]
+            self.mars_x.append(pos_mars[0])
+            self.mars_y.append(pos_mars[1])
+            self.line_mars.set_data(self.mars_x, self.mars_y)
+            self.mars.center = pos_mars
+            self.text_mars.set_position(pos_mars)
 
-        # update displayed texts
-        t = self.Ts[self.myframe]
-        vel_rocket = self.Xs[self.myframe][2:4]
-        vel_mars = self.Xs[self.myframe][10:12]
-        self.text_time.set_text('t = {:6.0f} s'.format(t))
-        self.text_vel_rocket.set_text(
-            'v_R = ({:6.0f}, {:6.0f})'.format(vel_rocket[0], vel_rocket[1]))
-        self.text_vel_mars.set_text(
-            'v_M = ({:6.0f}, {:6.0f})'.format(vel_mars[0], vel_mars[1]))
-        self.text_level.set_text('Level {}'.format(self.difficulty))
+            # update displayed texts
+            t = self.Ts[self.myframe]
+            vel_rocket = self.Xs[self.myframe][2:4]
+            vel_mars = self.Xs[self.myframe][10:12]
+            self.text_time.set_text('t = {:6.0f} s'.format(t))
+            self.text_vel_rocket.set_text(
+                'v_R = ({:6.0f}, {:6.0f})'.format(vel_rocket[0], vel_rocket[1]))
+            self.text_vel_mars.set_text(
+                'v_M = ({:6.0f}, {:6.0f})'.format(vel_mars[0], vel_mars[1]))
+            self.text_level.set_text('Level {}'.format(self.difficulty))
 
-        # check victory conditions
-        dist_rocket_mars = np.linalg.norm(np.array(pos_rocket) - np.array(pos_mars))
-        vel_dist_rocket_mars = np.linalg.norm(np.array(vel_rocket) - np.array(vel_mars))
-        self.check_victory(dist_rocket_mars, vel_dist_rocket_mars)
+            # check victory conditions
+            dist_rocket_mars = np.linalg.norm(np.array(pos_rocket) - np.array(pos_mars))
+            vel_dist_rocket_mars = np.linalg.norm(np.array(vel_rocket) - np.array(vel_mars))
+            self.check_victory(dist_rocket_mars, vel_dist_rocket_mars)
 
-        self.myframe += max(1, self.speed * self.speed)
+            self.myframe += max(1, self.speed * self.speed)
+        else:
+            # do nothing
+            pass
 
         return self.line_rocket, self.line_earth, self.line_mars, self.point_rocket, self.earth, self.mars, self.sun, \
                self.text_rocket, self.text_earth, self.text_mars, self.text_sun, self.text_time, self.text_vel_rocket, \
@@ -347,13 +352,13 @@ class FlightAnim:
     def handleKeys(self, event):
         if event.key == 'down':
             if self.anim_running:
-                self.anim.event_source.stop()
+                #self.anim.event_source.stop()
                 self.anim_running = False
-                self.redraw = True
+                #self.redraw = True
             else:
-                self.anim.event_source.start()
+                #self.anim.event_source.start()
                 self.anim_running = True
-                self.redraw = False
+                #self.redraw = False
 
         # control simulation speed
         if event.key == '-':
@@ -490,6 +495,6 @@ class FlightAnim:
         self.Ts, self.Xs = self.simulator.run_simulation(commands_clean, self.tf)
 
         self.anim_running = True
-        self.anim = animation.FuncAnimation(self.fig, self.update_func, frames=100,
-                                            interval=30, blit=True, init_func=self.init_func)
+        self.anim = animation.FuncAnimation(self.fig, self.update_func, frames=100000000000000,
+                                            interval=10, blit=True, init_func=self.init_func)
         plt.show()
