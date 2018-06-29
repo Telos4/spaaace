@@ -16,7 +16,7 @@ class FlightAnim:
         self.pd = PlanetData('GEO')
         self.simulator = Simulator(self.pd)
 
-        self.tf = 1.0e9  # max time for simulation
+        self.tf = 1.0e8  # max time for simulation
         self.delta_t_mars = 0.0
         self.Xs = []
         self.Ts = []
@@ -26,8 +26,6 @@ class FlightAnim:
         # 2 = 0.01 AE
         # 3 = orbit
         
-        
-
         max = 3.0 * self.pd.AE
 
         self.box_lbx = -max
@@ -102,7 +100,7 @@ class FlightAnim:
         self.text_setslower = self.ax_infocontrol.text(0.1, 0.35, 'Sim-Geschw. verringern : +')
         self.ax_infocontrol.get_xaxis().set_visible(False)
         self.ax_infocontrol.get_yaxis().set_visible(False)
-        self.text_setpause = self.ax_infocontrol.text(0.1, 0.75, 'Pause : Up')
+        self.text_setpause = self.ax_infocontrol.text(0.1, 0.75, 'Pause : Pfeiltaste runter')
 
         self.victory_text = self.ax_info.text(0.1, 0.25, 'Victory!')
 
@@ -151,8 +149,8 @@ class FlightAnim:
         self.button_run = Button(self.ax_button, 'Start', color='g', hovercolor='g')
         self.button_run.on_clicked(self.callback_button_run)
 
-        self.fig.canvas.mpl_connect('motion_notify_event', self.axes_enter)
-        self.fig.canvas.mpl_connect('resize_event', self.axes_enter)
+        #self.fig.canvas.mpl_connect('motion_notify_event', self.axes_enter)
+        #self.fig.canvas.mpl_connect('resize_event', self.axes_enter)
         self.fig.canvas.mpl_connect('key_press_event', self.handleKeys)
 
         self.ax.set_aspect('equal')
@@ -163,29 +161,6 @@ class FlightAnim:
         self.anim_running = False
         self.anim = None
         self.redraw = False
-
-    def axes_enter(self, event):
-        if self.redraw:
-            self.line_earth.axes.draw_artist(self.line_earth)
-            self.line_mars.axes.draw_artist(self.line_mars)
-            self.line_rocket.axes.draw_artist(self.line_rocket)
-            self.point_rocket.axes.draw_artist(self.point_rocket)
-            self.sun.axes.draw_artist(self.sun)
-            self.earth.axes.draw_artist(self.earth)
-            self.mars.axes.draw_artist(self.mars)
-            self.text_sun.axes.draw_artist(self.text_sun)
-            self.text_mars.axes.draw_artist(self.text_mars)
-            self.text_earth.axes.draw_artist(self.text_earth)
-            self.text_rocket.axes.draw_artist(self.text_rocket)
-            self.text_time.axes.draw_artist(self.text_time)
-            self.text_vel_rocket.axes.draw_artist(self.text_vel_rocket)
-            self.text_vel_mars.axes.draw_artist(self.text_vel_mars)
-            self.text_level.axes.draw_artist(self.text_level)
-            self.victory_text.axes.draw_artist(self.victory_text)
-            self.ax.figure.canvas.blit(self.ax.bbox)
-            self.ax_time.figure.canvas.blit(self.ax_time.bbox)
-            self.ax_info.figure.canvas.blit(self.ax_info.bbox)
-            self.ax_level.figure.canvas.blit(self.ax_level.bbox)
 
     def init_func(self):
         print("init function")
@@ -352,13 +327,11 @@ class FlightAnim:
     def handleKeys(self, event):
         if event.key == 'down':
             if self.anim_running:
-                #self.anim.event_source.stop()
                 self.anim_running = False
-                #self.redraw = True
             else:
-                #self.anim.event_source.start()
                 self.anim_running = True
-                #self.redraw = False
+
+        difficulty_old = self.difficulty
 
         # control simulation speed
         if event.key == '-':
@@ -378,21 +351,23 @@ class FlightAnim:
         elif event.key == 'ctrl+3':
             self.difficulty = 3
 
-        if self.difficulty == 1:
-            self.mars.width = 0.1 * self.pd.AE
-            self.mars.height = 0.1 * self.pd.AE
-            self.earth.width = 0.1 * self.pd.AE
-            self.earth.height = 0.1 * self.pd.AE
-        elif self.difficulty == 2:
-            self.mars.width = 0.01 * self.pd.AE
-            self.mars.height = 0.01 * self.pd.AE
-            self.earth.width = 0.01 * self.pd.AE
-            self.earth.height = 0.01 * self.pd.AE
-        elif self.difficulty > 2:
-            self.mars.width = 6800.0e3
-            self.mars.height = 6800.0e3
-            self.earth.width = 12742.0e3
-            self.earth.height = 12742.0e3
+        difficulty_changed = (self.difficulty != difficulty_old)
+        if difficulty_changed:
+            if self.difficulty == 1:
+                self.mars.width = 0.1 * self.pd.AE
+                self.mars.height = 0.1 * self.pd.AE
+                self.earth.width = 0.1 * self.pd.AE
+                self.earth.height = 0.1 * self.pd.AE
+            elif self.difficulty == 2:
+                self.mars.width = 0.01 * self.pd.AE
+                self.mars.height = 0.01 * self.pd.AE
+                self.earth.width = 0.01 * self.pd.AE
+                self.earth.height = 0.01 * self.pd.AE
+            elif self.difficulty > 2:
+                self.mars.width = 6800.0e3
+                self.mars.height = 6800.0e3
+                self.earth.width = 12742.0e3
+                self.earth.height = 12742.0e3
 
     def auto_solve(self):
         # reset to get a clean state
