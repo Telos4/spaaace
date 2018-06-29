@@ -290,6 +290,7 @@ class FlightAnim:
 
     def submit_command(self, i, text):
         # TODO check text
+        text = text.replace(',','.')
         print("submit function " + str(i))
         print("text = " + text)
         data = np.fromstring(text, sep=' ')
@@ -320,6 +321,7 @@ class FlightAnim:
 
     def submit_delta_t_mars(self, text):
         # TODO check text
+        text = text.replace(',','.')
         self.delta_t_mars = float(text)
 
     def callback_button_run(self, event):
