@@ -70,7 +70,6 @@ class Simulator():
         # convert commands to format used by solver
         # commands = (time, duration, angle, thrust)
         # commands_mode = (time, angle, thrust)
-        print(commands)
         if commands[0,0] > t:
             commands_mod = [np.zeros(3)]
         else:

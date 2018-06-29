@@ -16,7 +16,7 @@ class FlightAnim:
         self.pd = PlanetData('GEO')
         self.simulator = Simulator(self.pd)
 
-        self.tf = 1.0e8  # max time for simulation
+        self.tf = 1.0e9  # max time for simulation
         self.delta_t_mars = 0.0
         self.Xs = []
         self.Ts = []
@@ -73,15 +73,15 @@ class FlightAnim:
         self.ax_time.get_yaxis().set_visible(False)
         self.text_time = self.ax_time.text(0.1, 0.5, 't = 0.0')
         
-        self.ax_comdescript = plt.subplot(gs[0, 7:])
+        self.ax_comdescript = plt.subplot(gs[0, 6:])
         self.ax_comdescript.get_xaxis().set_visible(False)
         self.ax_comdescript.get_yaxis().set_visible(False)
         self.text_comdescript = self.ax_comdescript.text(0.1, 0.1, 'Zeit, Dauer, Winkel, Schub')
         self.text_comvar = self.ax_comdescript.text(0.1, 0.6, 't,    delta t,  w,         u')
 
         self.ax_level = plt.subplot(gs[0, 0:2])
-        self.ax_level .get_xaxis().set_visible(False)
-        self.ax_level .get_yaxis().set_visible(False)
+        self.ax_level.get_xaxis().set_visible(False)
+        self.ax_level.get_yaxis().set_visible(False)
         self.text_level = self.ax_level.text(0.1, 0.5, 'Level 1')
 
         self.ax_info = plt.subplot(gs[7:10, 0:5])
@@ -93,16 +93,16 @@ class FlightAnim:
         self.ax_info.get_yaxis().set_visible(False)
         self.text_vel_mars = self.ax_info.text(0.1, 0.75, 'v_{M} = (0.0, 0.0)')
         
-        self.ax_infocontrol = plt.subplot(gs[8:10, 4:8])
+        self.ax_infocontrol = plt.subplot(gs[8:10, 5:9])
         self.ax_infocontrol.get_xaxis().set_visible(False)
         self.ax_infocontrol.get_yaxis().set_visible(False)
-        self.text_setfaster = self.ax_infocontrol.text(0.1, 0.1, 'Sim-Geschw. erhöhen : -')
+        self.text_setfaster = self.ax_infocontrol.text(0.1, 0.1, 'Sim-Geschw. erhoehen : -')
         self.ax_infocontrol.get_xaxis().set_visible(False)
         self.ax_infocontrol.get_yaxis().set_visible(False)
         self.text_setslower = self.ax_infocontrol.text(0.1, 0.35, 'Sim-Geschw. verringern : +')
         self.ax_infocontrol.get_xaxis().set_visible(False)
         self.ax_infocontrol.get_yaxis().set_visible(False)
-        self.text_setpause = self.ax_infocontrol.text(0.1, 0.75, 'Pause : ↑')
+        self.text_setpause = self.ax_infocontrol.text(0.1, 0.75, 'Pause : Up')
 
         self.victory_text = self.ax_info.text(0.1, 0.25, 'Victory!')
 
@@ -180,26 +180,12 @@ class FlightAnim:
             self.text_time.axes.draw_artist(self.text_time)
             self.text_vel_rocket.axes.draw_artist(self.text_vel_rocket)
             self.text_vel_mars.axes.draw_artist(self.text_vel_mars)
-            self.text_level.draw_artist(self.text_level)
+            self.text_level.axes.draw_artist(self.text_level)
             self.victory_text.axes.draw_artist(self.victory_text)
             self.ax.figure.canvas.blit(self.ax.bbox)
             self.ax_time.figure.canvas.blit(self.ax_time.bbox)
             self.ax_info.figure.canvas.blit(self.ax_info.bbox)
-
-    def axes_enter(self, event):
-        print("entered button!")
-        if self.anim_running == False:
-            self.sun.axes.draw_artist(self.sun)
-            self.earth.axes.draw_artist(self.earth)
-            self.mars.axes.draw_artist(self.mars)
-            self.text_sun.axes.draw_artist(self.text_sun)
-            self.text_mars.axes.draw_artist(self.text_mars)
-            self.text_earth.axes.draw_artist(self.text_earth)
-            self.text_time.axes.draw_artist(self.text_time)
-            self.text_vel_rocket.axes.draw_artist(self.text_vel_rocket)
-            self.text_vel_mars.axes.draw_artist(self.text_vel_mars)
-            self.ax.figure.canvas.blit(self.ax.bbox)
-        #self.ax.draw()
+            self.ax_level.figure.canvas.blit(self.ax_level.bbox)
 
     def init_func(self):
         # initialize plot data
@@ -221,8 +207,6 @@ class FlightAnim:
         self.text_vel_mars.set_text('')
         self.victory_text.set_text('')
         self.text_level.set_text('')
-
-        print("init!")
 
         return self.line_rocket, self.line_earth, self.line_mars, self.point_rocket, self.earth, self.mars, self.sun, \
                self.text_rocket, self.text_earth, self.text_mars, self.text_sun, self.text_time, self.text_vel_rocket, \
@@ -296,7 +280,6 @@ class FlightAnim:
                 print("Orbit achieved!")
 
         if victory == True:
-            print("Victory!")
             # display information
             # time, energy, dist, delta_v
             self.text_vel_mars.set_text('')
@@ -323,8 +306,6 @@ class FlightAnim:
     def submit_command(self, i, text):
         # TODO check text
         text = text.replace(',','.')
-        print("submit function " + str(i))
-        print("text = " + text)
         data = np.fromstring(text, sep=' ')
         if self.check_data(data, i) == True:
             print("good data")
@@ -337,7 +318,7 @@ class FlightAnim:
     def check_data(self, data, i):
         if len(data) != 4:
             return False
-        if data[0] < 0 or data[1] <= 0.0:
+        if data[0] < 0 or data[0] > self.tf or data[1] <= 0.0 or data[0]+data[1] > self.tf:
             return False
         # check if time point is too early
         for j in range(0, i):
@@ -373,7 +354,6 @@ class FlightAnim:
                 self.anim.event_source.start()
                 self.anim_running = True
                 self.redraw = False
-            print("Pause")
 
         # control simulation speed
         if event.key == '-':
@@ -480,12 +460,9 @@ class FlightAnim:
         self.earth_y = []
 
         if self.delta_t_mars != 0.0:
-            print("running simulation for mars position")
             x_temp = self.simulator.run_simulation_planets(self.delta_t_mars)
-            print("new position = {}".format(x_temp))
             self.simulator.set_mars_position(x_temp[4:8])
         else:
-            print("resetting mars position")
             self.simulator.reset_mars_position()
 
         commands_clean = self.clean_commands()
@@ -498,13 +475,10 @@ class FlightAnim:
     def clean_commands(self):
         commands_clean = None
         for i in range(0, len(self.commands.keys())):
-            print(commands_clean)
-            print(self.commands[i])
             if self.commands[i] is not None:
                 c = np.copy(self.commands[i])
                 c[2] = c[2] / 360.0 * 2.0 * np.pi # convert to rad
 
-                print("c = {}".format(c))
                 if commands_clean is None:
                     commands_clean = np.array([c])
                 else:
