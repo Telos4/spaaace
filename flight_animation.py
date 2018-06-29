@@ -94,10 +94,10 @@ class FlightAnim:
         self.ax_infocontrol = plt.subplot(gs[8:10, 5:9])
         self.ax_infocontrol.get_xaxis().set_visible(False)
         self.ax_infocontrol.get_yaxis().set_visible(False)
-        self.text_setfaster = self.ax_infocontrol.text(0.1, 0.1, 'Sim-Geschw. erhoehen : -')
+        self.text_setfaster = self.ax_infocontrol.text(0.1, 0.1, 'Sim-Geschw. erhoehen : +')
         self.ax_infocontrol.get_xaxis().set_visible(False)
         self.ax_infocontrol.get_yaxis().set_visible(False)
-        self.text_setslower = self.ax_infocontrol.text(0.1, 0.35, 'Sim-Geschw. verringern : +')
+        self.text_setslower = self.ax_infocontrol.text(0.1, 0.35, 'Sim-Geschw. verringern : -')
         self.ax_infocontrol.get_xaxis().set_visible(False)
         self.ax_infocontrol.get_yaxis().set_visible(False)
         self.text_setpause = self.ax_infocontrol.text(0.1, 0.75, 'Pause : Pfeiltaste runter')
@@ -276,8 +276,8 @@ class FlightAnim:
             self.victory_text.set_text(text)
 
             self.anim_running = False
-            self.redraw = True
-            self.anim.event_source.stop()
+            #self.redraw = True
+            #self.anim.event_source.stop()
 
         else:
             self.victory_text.set_text('')
