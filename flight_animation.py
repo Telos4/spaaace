@@ -40,7 +40,7 @@ class FlightAnim:
         command_input_fields = 5
         self.ax_command_input = []
         self.command_text_boxes = []
-        self.commands = {0: np.array([0.0, 600.0, 0.0, 10.0])}
+        self.commands = {0: np.array([0.0, 600.0, 0.0, 5.0])}
         for i in range(1, command_input_fields):
             self.commands[i] = None
 
