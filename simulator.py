@@ -62,7 +62,7 @@ class Simulator():
     def run_simulation(self, commands, tf):
         x = self.x0
         t = self.t0
-        t_timer_start = time.clock()
+        t_timer_start = time.time()
         odes.t_timer_start = t_timer_start
         Ts = np.array([t])
         Xs = np.array([x])
@@ -110,7 +110,7 @@ class Simulator():
             w = commands_mod[i][1]
             u = commands_mod[i][2]
 
-            t_eval = np.linspace(t0, t1, np.ceil((t1-t0)/self.dt)+1)
+            t_eval = np.linspace(t0, t1, int(np.ceil((t1-t0)/self.dt)+1))
 
             sol = solve_ivp(fun= lambda t, x: odes.f_full(t, x, u, w), t_span=(t0, t1), y0=x, t_eval=t_eval, method='RK45',
                             rtol=1.0e-5, atol=1.0e-8, events=[odes.event_mars_hit, odes.event_timeout])
@@ -118,7 +118,7 @@ class Simulator():
             Xs = np.concatenate((Xs, np.transpose(sol.y[:,1:])))
             x = Xs[-1]
             pass
-        t_timer_end = time.clock()
+        t_timer_end = time.time()
         print("ODE solve duration: {}".format(t_timer_end-t_timer_start))
 
         return Ts, Xs

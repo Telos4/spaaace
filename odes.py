@@ -43,7 +43,7 @@ def f_full(t, x, u, w):
     return dx
 
 def event_timeout(t, x):
-    t_diff = time.clock() - t_timer_start
+    t_diff = time.time() - t_timer_start
     t_max = 1.0
     if t_diff > t_max:
         print("Solver Timeout!")

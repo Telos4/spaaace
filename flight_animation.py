@@ -202,7 +202,8 @@ class FlightAnim:
             self.rocket_x.append(pos_rocket[0])
             self.rocket_y.append(pos_rocket[1])
             self.line_rocket.set_data(self.rocket_x, self.rocket_y)
-            self.point_rocket.set_data(pos_rocket[0], pos_rocket[1])
+            s = np.array([pos_rocket[0], pos_rocket[1]])
+            self.point_rocket.set_data(*np.expand_dims(s, axis=1))
             self.text_rocket.set_position(pos_rocket)
 
             # update plot data for earth
